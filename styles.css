@@ -1,0 +1,94 @@
+header { /* Header alignemnt to the center */
+    text-align: center;
+}
+body { /* For body backgorund color and font style */
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: white;
+  }
+  
+  table { /* For Table Measurements */
+    width: 600px;
+    height: 300px;
+    border-collapse: collapse;
+  }
+  
+  .center{ /* To align table at the center */
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  td { /* For table cell */
+    width: 100px;
+    height: 100px;
+    border: 1px solid #cccccc;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+  }
+  
+  .box { /* For box measurements and alignment */
+    width: 80px;
+    height: 40px;
+    margin: auto;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: grab;
+    transition: all 1s ease-in-out;
+  }
+  .box:hover{ /* For box animation upon hovering*/
+    width: 120px;
+    height: 80px;
+    transition-duration: 0.1s;
+  }
+  #controls { /* For control button alignment and measurements*/
+    margin-bottom: 20px;
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .button { /* For buttons measurement and alignment */
+    border-radius: 12px;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+  }
+  .btn-addrow { /* For add row button color*/
+    background-color: white; 
+    color: black; 
+    border: 4px solid #008CBA;
+  }
+  
+  .btn-addrow:hover { /* For add row button color upon hovering*/
+    background-color: #008CBA;
+    color: white;
+  }
+  .btn-undo { /* For undo button color*/
+    background-color: white; 
+    color: black; 
+    border: 4px solid #008CBA;
+  }
+  
+  .btn-undo:hover { /* For undo button color upon hovering*/
+    background-color: #008CBA;
+    color: white;
+  }
+  .btn-redo { /* For redo button color*/
+    background-color: white; 
+    color: black; 
+    border: 4px solid #008CBA;
+  }
+  
+  .btn-redo:hover { /* For redo button color upon hovering*/
+    background-color: #008CBA;
+    color: white;
+  }
