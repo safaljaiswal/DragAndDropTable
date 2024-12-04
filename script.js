@@ -1,120 +1,141 @@
 let boxCounter = 100; // First Box number
-let actionStack = []; // Stack to track undo action
-let redoStack = []; // Stack to track redo action
+const table = document.getElementById('mainTable'); // To fetch main table element
 
-const table = document.getElementById('mainTable');
+// Command Pattern - Command Queue
+const commandStack = [];
+const redoStack = [];
+let isInitialLoad = true; // Flag variable to indicate initial table creation completed or not
 
-// Function to generate intial table with 3 rows
-function createInitialTable() {
-  for (let i = 0; i < 3; i++) {
-    addRow(false); // Add rows without recording in undo action stack
+// Base Command Class
+class Command {
+  execute() {}
+  undo() {}
+}
+
+// Command to Add a Row
+class AddRowCommand extends Command {
+  constructor() {
+    super();
+    this.addedRow = null; // To track the row added
+  }
+
+  execute() {
+    const row = document.createElement('tr'); // Creates a new table row
+    for (let i = 0; i < 3; i++) {
+      const cell = document.createElement('td'); // Creates a new cell
+      const box = document.createElement('div'); // Creates a new box
+      box.className = 'box'; // Assign class name to box
+      box.style.backgroundColor = getRandomColor(); // Assign a random color to the box
+      box.innerText = boxCounter; // Assign a unique number to the box
+      box.setAttribute('draggable', true); // Make the box a draggable box
+      box.dataset.number = boxCounter += 100; // Increment the counter by 100
+      cell.appendChild(box); // Add the box to the cell
+      row.appendChild(cell); // Add the cell to the row
+    }
+    table.appendChild(row); // Add the row to the table
+    this.addedRow = row; // Track the row for undo action
+  }
+
+  undo() {
+    if (this.addedRow) {
+      table.removeChild(this.addedRow); // Remove the row newly added
+    }
   }
 }
 
-// Function to Add rows
-function addRow(pushAction = true) {
-  const row = document.createElement('tr'); // Create a new table row
-  for (let i = 0; i < 3; i++) {
-    const cell = document.createElement('td'); // Create a new cell
-    const box = document.createElement('div'); // Create a new box
-    box.className = 'box'; // Assigns class name to element box
-    box.style.backgroundColor = getRandomColor(); // Gives a random color to the box
-    box.innerText = boxCounter; // Assign number to the box
-    box.setAttribute('draggable', true); // Make the box draggable
-    box.dataset.number = boxCounter +=100; // Increments the box number by 100
-    cell.appendChild(box); // Add the box to the cell
-    row.appendChild(cell); // Add the cell to the row
+// Command class to Swap Boxes
+class SwapBoxesCommand extends Command {
+  constructor(sourceCell, destinationCell) {
+    super();
+    this.sourceCell = sourceCell;
+    this.destinationCell = destinationCell;
   }
-  table.appendChild(row); // Append the row to the table
-  if (pushAction) {
-    actionStack.push({ type: 'addRow' }); // Adds the action to the actionStack to enable undo functionality
-    redoStack.length = 0; // Clear redo stack after adding a new action
+
+  execute() {
+    this._swapBoxes(this.sourceCell, this.destinationCell); // Swap the boxes
+  }
+
+  undo() {
+    this._swapBoxes(this.destinationCell, this.sourceCell); // Swap back to previous locations
+  }
+
+  _swapBoxes(cellA, cellB) {
+    const boxA = cellA.firstChild;
+    const boxB = cellB.firstChild;
+    if (boxA && boxB) {
+      cellA.appendChild(boxB);
+      cellB.appendChild(boxA);
+    }
   }
 }
 
-// Function to generate a Random Color
+// Function for generating random colors
 function getRandomColor() {
   return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
 }
 
-// Handle Drag and Drop functionality
-table.addEventListener('dragstart', handleDragStart); // Add event listeners for Drag start funtionality
-table.addEventListener('dragover', handleDragOver); // Add event listeners for Drag over funtionality
-table.addEventListener('drop', handleDrop); // Add event listeners for Drop funtionality
-
-let sourceCell;
-// Function to handle Drag start functionality
-function handleDragStart(e) {
-  if (e.target.classList.contains('box')) {
-    sourceCell = e.target.parentElement; // Save the source cell of the box
-    e.dataTransfer.setData('text', e.target.dataset.number);
-    e.target.style.opacity = '0.5'; // In-transit visual effect for the box
-  }
-}
-
-function handleDragOver(e) {
-  e.preventDefault(); // Allow dropping of the box
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  const destinationCell = e.target.closest('td'); // Target cell location
-  if (destinationCell && destinationCell !== sourceCell) {
-    const draggedBox = sourceCell.firstChild; // Box from the source cell
-    const targetBox = destinationCell.firstChild; // Box from the target cell
-
-    // Swapping of the boxes
-    destinationCell.appendChild(draggedBox);
-    sourceCell.appendChild(targetBox);
-
-    draggedBox.style.opacity = '1'; // Restore opacity of the box
-
-    // Record the action for undo or redo funtionality
-    actionStack.push({
-      type: 'dragDrop',
-      source: sourceCell,
-      destination: destinationCell,
-    });
-    redoStack.length = 0; // Clear the redo stack
+// Function to execute a command
+function executeCommand(command) {
+  command.execute();
+  if (!isInitialLoad) {
+    commandStack.push(command); // Store the command for undo action
+    redoStack.length = 0; // Clear redo stack
   }
 }
 
 // Function for Undo Functionality
 function undo() {
-  if (actionStack.length === 0) return; // No actions to undo
-  const lastAction = actionStack.pop();
-  redoStack.push(lastAction); // Push to redo stack
-
-  if (lastAction.type === 'addRow') {
-    table.deleteRow(-1); // Remove the last row
-  } else if (lastAction.type === 'dragDrop') {
-    const { source, destination } = lastAction;
-    source.appendChild(destination.firstChild); // Revert the swap
-    destination.appendChild(source.firstChild);
-  }
+  if (commandStack.length === 0) return; // No actions to undo as page is freshly loaded
+  const lastCommand = commandStack.pop();
+  lastCommand.undo();
+  redoStack.push(lastCommand); // Add to redo stack
 }
 
 // Function for Redo Functionality
 function redo() {
-  if (redoStack.length === 0) return; // No actions to redo
+  if (redoStack.length === 0) return; // No actions to redo as page is freshly loaded
   const lastRedo = redoStack.pop();
-  actionStack.push(lastRedo); // Push back to action stack
-
-  if (lastRedo.type === 'addRow') {
-    addRow(false); // Again add the row
-  } else if (lastRedo.type === 'dragDrop') {
-    const { source, destination } = lastRedo;
-    destination.appendChild(source.firstChild); // Redo the swap
-    source.appendChild(destination.firstChild);
-  }
+  lastRedo.execute();
+  commandStack.push(lastRedo); // Add back to command stack
 }
 
-// Attach event listeners for undo and redo buttons
-document.getElementById('undo').addEventListener('click', undo);
-document.getElementById('redo').addEventListener('click', redo);
+// Event Handlers
+document.getElementById('addRow').addEventListener('click', () => {
+  isInitialLoad = false; // Now a user initiated move
+  executeCommand(new AddRowCommand()); // Add a new row to the table
+});
 
-// Attach event listener for add row button
-document.getElementById('addRow').addEventListener('click', () => addRow(true));
+document.getElementById('undo').addEventListener('click', undo); // On click will trigger the undo functionality
+document.getElementById('redo').addEventListener('click', redo); // On click will trigger the redo functionality
 
-// Initialize the table
-createInitialTable();
+// Funtion for Drag and Drop feature
+let sourceCell;
+table.addEventListener('dragstart', (e) => {
+  if (e.target.classList.contains('box')) {
+    sourceCell = e.target.parentElement; // Save the source cell location
+    e.dataTransfer.setData('text', e.target.dataset.number);
+    e.target.style.opacity = '0.5'; // Add dragging effect
+  }
+});
+
+table.addEventListener('dragover', (e) => e.preventDefault()); // When the drag happens, prevents the default behaviour of the element
+
+table.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const destinationCell = e.target.closest('td'); // Identify the drop target location
+  if (destinationCell && destinationCell !== sourceCell) {
+    const swapCommand = new SwapBoxesCommand(sourceCell, destinationCell);
+    isInitialLoad = false; // Now a user initiated step
+    executeCommand(swapCommand); // Execute swap as a command
+  }
+  const draggedBox = sourceCell.firstChild;
+  if (draggedBox) draggedBox.style.opacity = '1'; // Restore opacity
+});
+
+// Initialize the table with rows
+(function createInitialTable() {
+  for (let i = 0; i < 3; i++) {
+    executeCommand(new AddRowCommand());
+  }
+  isInitialLoad = false; // Mark as false when the page is loaded for the first time
+})();
