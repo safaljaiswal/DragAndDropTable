@@ -8,8 +8,9 @@ let isInitialLoad = true; // Flag variable to indicate initial table creation co
 
 // Base Command Class
 class Command {
-  execute() {}
-  undo() {}
+  execute() {} // Method for execute
+  undo() {} // Method for undo
+  redo() {} // Method for redo
 }
 
 // Command to Add a Row
@@ -41,7 +42,9 @@ class AddRowCommand extends Command {
       table.removeChild(this.addedRow); // Remove the row newly added
     }
   }
-}
+  redo() {
+    table.appendChild(this.addedRow); // Add the row again
+  }
 
 // Command class to Swap Boxes
 class SwapBoxesCommand extends Command {
@@ -56,9 +59,12 @@ class SwapBoxesCommand extends Command {
   }
 
   undo() {
-    this._swapBoxes(this.destinationCell, this.sourceCell); // Swap back to previous locations
+    this._swapBoxes(this.destinationCell, this.sourceCell); // Swap back to initial locations
   }
-
+  redo() {
+    this._swapBoxes(this.sourceCell, this.destinationCell); // Redo the the swap
+  }
+    
   _swapBoxes(cellA, cellB) {
     const boxA = cellA.firstChild;
     const boxB = cellB.firstChild;
