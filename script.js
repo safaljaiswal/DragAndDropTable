@@ -1,8 +1,8 @@
-let boxCounter = 100; // First Box number
-const table = document.getElementById('mainTable'); // To fetch main table element
+let boxCounter = 100; // First box number 
+const table = document.getElementById('mainTable'); // To fetch element main table
 
 // Command Pattern - Command Queue
-const commandStack = [];
+const commandStack = []; 
 const redoStack = [];
 let isInitialLoad = true; // Flag variable to indicate initial table creation completed or not
 
@@ -45,7 +45,7 @@ class AddRowCommand extends Command {
   redo() {
     table.appendChild(this.addedRow); // Add the row again
   }
-
+}
 // Command class to Swap Boxes
 class SwapBoxesCommand extends Command {
   constructor(sourceCell, destinationCell) {
@@ -119,7 +119,7 @@ let sourceCell;
 table.addEventListener('dragstart', (e) => {
   if (e.target.classList.contains('box')) {
     sourceCell = e.target.parentElement; // Save the source cell location
-    e.dataTransfer.setData('text', e.target.dataset.number);
+    e.dataTransfer.setData('text', e.target.dataset.number); // Swap the number inside the box as well
     e.target.style.opacity = '0.5'; // Add dragging effect
   }
 });
@@ -135,7 +135,9 @@ table.addEventListener('drop', (e) => {
     executeCommand(swapCommand); // Execute swap as a command
   }
   const draggedBox = sourceCell.firstChild;
-  if (draggedBox) draggedBox.style.opacity = '1'; // Restore opacity
+  if (draggedBox) {
+    draggedBox.style.opacity = '1'; // To Restore the opacity
+  }
 });
 
 // Initialize the table with rows
